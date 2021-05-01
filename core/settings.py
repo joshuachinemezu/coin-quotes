@@ -187,6 +187,6 @@ CELERY_TIMEZONE = 'Asia/Dubai'
 CELERY_BEAT_SCHEDULE = {
     'save_currency_quotes': {
         'task': 'quotes.tasks.save_currency_quotes',
-        'schedule': crontab(minute=1)
+        'schedule': crontab(minute='*/10')  # Runs every 10 minutes
     },
 }
