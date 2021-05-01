@@ -1,0 +1,8 @@
+# Builds
+bin/
+
+# Git
+.git/
+
+# Virtual Env
+venv/

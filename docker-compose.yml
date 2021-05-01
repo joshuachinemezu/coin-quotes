@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+    api:
+        container_name: quotes_api_server
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        entrypoint: ./scripts/docker-entrypoint.sh
+        restart: always
+        networks:
+            - quotes-backend-tier
+        env_file: .env
+        ports:
+            - '8000:8000'
+        volumes:
+            - .:/app
+        depends_on:
+            - db
+
+    db:
+        image: mdillon/postgis:11
+        environment:
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: coin_quotes
+        networks:
+            - quotes-backend-tier
+        ports:
+            - '5437:5432'
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+
+    redis:
+        container_name: quotes_redis_server
+        image: redis:5.0-alpine
+        restart: unless-stopped
+        networks:
+            - quotes-backend-tier
+        volumes:
+            - quotes-redis:/data
+
+    celery:
+        container_name: quotes_celery_server
+        build:
+            context: .
+        command: celery -A core worker -B -l INFO
+        restart: unless-stopped
+        networks:
+            - quotes-backend-tier
+        env_file: .env
+        depends_on:
+            - db
+            - redis
+            - api
+
+volumes:
+    quotes-redis:
+        driver: local
+    pgdata:
+
+networks:
+    quotes-backend-tier:
+        driver: bridge
