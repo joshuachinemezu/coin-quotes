@@ -3,8 +3,10 @@ from rest_framework.views import APIView
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.response import Response
 from core.response import HttpRes
+from quotes.models import Quote
 from quotes.serializers import QuoteSerializer
 from core.utils import fetch_quotes, parse_key
+from django.shortcuts import get_object_or_404
 
 response_format = HttpRes().response
 
@@ -31,5 +33,14 @@ class QuoteView(APIView):
             quotes_serializer.save()
 
         response_format['data'] = currency_quote
+        response_format['message'] = 'Operation was successful'
+        return Response(response_format)
+
+    def get(self, request):
+
+        quote = get_object_or_404(Quote, from_currency_code='BTC')
+        quote_serializer = self.serializer_class(quote)
+
+        response_format['data'] = quote_serializer.data
         response_format['message'] = 'Operation was successful'
         return Response(response_format)
