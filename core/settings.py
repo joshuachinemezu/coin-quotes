@@ -37,7 +37,7 @@ SECRET_KEY = env('APP_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', False)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 
 # Application definition
@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'quotes.apps.QuotesConfig',
+    'rest_framework_api_key',
+    'quotes',
 ]
 
 MIDDLEWARE = [
@@ -87,7 +88,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {}
-DATABASES['default'] = env.db_url("DATABASE_URL")
+DATABASES['default'] = env.db_url('DATABASE_URL')
 
 
 # Password validation
@@ -127,3 +128,46 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+ALPHAVANTAGE_API_KEY = env('ALPHAVANTAGE_API_KEY')
+
+if os.environ.get('APP_ENV') == 'production':
+    APP_ENV_STATE_REST_FRAMEWORK_CONFIG = {
+        # Use Django's standard `django.contrib.auth` permissions,
+        # or allow read-only access for unauthenticated users.
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.JSONRenderer',
+        ),
+    }
+else:
+    APP_ENV_STATE_REST_FRAMEWORK_CONFIG = {}
+
+
+COMMON_REST_FRAMEWORK_CONFIG = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # 'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
+
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'coin_quotes': '5/min',
+    }
+}
+
+# Merge two rest framework configs
+REST_FRAMEWORK = {**APP_ENV_STATE_REST_FRAMEWORK_CONFIG,
+                  **COMMON_REST_FRAMEWORK_CONFIG}
