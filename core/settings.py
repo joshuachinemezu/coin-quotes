@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import os
 from pathlib import Path
 import environ
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -171,3 +172,21 @@ COMMON_REST_FRAMEWORK_CONFIG = {
 # Merge two rest framework configs
 REST_FRAMEWORK = {**APP_ENV_STATE_REST_FRAMEWORK_CONFIG,
                   **COMMON_REST_FRAMEWORK_CONFIG}
+
+API_KEY_CUSTOM_HEADER = 'HTTP_API_KEY'
+
+# CELERY STUFF
+CELERY_BROKER_URL = os.environ.get(
+    'CELERY_BROKER_URL', 'redis://localhost:6379')
+CELERY_RESULT_BACKEND = os.environ.get(
+    'CELERY_RESULT_BACKEND', 'redis://localhost:6379')
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Dubai'
+CELERY_BEAT_SCHEDULE = {
+    'save_currency_quotes': {
+        'task': 'quotes.tasks.save_currency_quotes',
+        'schedule': crontab(minute=1)
+    },
+}
